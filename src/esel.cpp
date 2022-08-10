@@ -1,10 +1,10 @@
 
 
-#include "vkbase.hpp"
+#include "vbase.hpp"
 
 
 int main() {
-     VkBase app;
+     VBase app;
 
     try {
         app.run();

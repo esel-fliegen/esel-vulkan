@@ -4,12 +4,13 @@
 #include <stdexcept>
 #include <cstdlib>
 
-#include "vkwindow.hpp"
+#include "vdevice.hpp"
 
-class VkBase : public VkWindow
+class VBase : public VDevice
 {
   public:
-    VkBase();
+    VBase();
     void run();
     void mainLoop();
+    void cleanup();
 };

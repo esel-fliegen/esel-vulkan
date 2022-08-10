@@ -1,8 +1,8 @@
-#include "vkwindow.hpp"
+#include "vwindow.hpp"
 
-VkWindow::VkWindow(){}
+VWindow::VWindow(){}
 
-void VkWindow::initGLFWwindow()
+void VWindow::initGLFWwindow()
 {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -11,13 +11,13 @@ void VkWindow::initGLFWwindow()
   glfwWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "ESEL", nullptr, nullptr);
 }
 
-void VkWindow::processInput(GLFWwindow* window)
+void VWindow::processInput(GLFWwindow* window)
 {
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
 }
 
-void VkWindow::cleanupGLFWwindow()
+void VWindow::cleanupGLFWwindow()
 {
   glfwDestroyWindow(glfwWindow);
   glfwTerminate();

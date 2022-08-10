@@ -1,5 +1,5 @@
 dir_to_ignore/build
-
+/.vscode
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

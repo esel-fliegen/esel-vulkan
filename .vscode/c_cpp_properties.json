@@ -4,6 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "common",
                 "/usr/local/include",
                 "/usr/include"
             ],
