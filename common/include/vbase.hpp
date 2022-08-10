@@ -1,10 +1,9 @@
 #pragma once
 
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib>
+
 
 #include "vdevice.hpp"
+
 
 class VBase : public VDevice
 {
@@ -12,5 +11,10 @@ class VBase : public VDevice
     VBase();
     void run();
     void mainLoop();
+    void initVulkan();    
     void cleanup();
+
+  protected:
+    
 };
+

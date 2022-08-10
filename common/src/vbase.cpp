@@ -1,15 +1,20 @@
 #include "vbase.hpp"
 
 VBase::VBase()
-{
-
-}
+{}
 
 void VBase::run()
 {
   initGLFWwindow();
-  mainLoop();
-  
+  initVulkan();
+  mainLoop();  
+  cleanup();
+}
+
+void VBase::initVulkan()
+{
+  createInstance();
+  setupDebugMessenger();
 }
 
 void VBase::mainLoop()
@@ -23,6 +28,11 @@ void VBase::mainLoop()
 
 void VBase::cleanup()
 {
+  if(enableValidationLayers)
+  {
+    DestroyDebugUtilsMessengerEXT(instance, debugMessenger, VK_NULL_HANDLE);
+  }
   vkDestroyInstance(instance, VK_NULL_HANDLE);
   cleanupGLFWwindow();
 }
+
