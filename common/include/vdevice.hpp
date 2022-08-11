@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <optional>
 
 #include "vwindow.hpp"
 
@@ -19,16 +20,30 @@ const std::vector<const char*> validationLayers = {
   "VK_LAYER_KHRONOS_validation"  
 };
 
+struct QueueFamilyIndices
+{
+  std::optional<uint32_t> graphicsFamily;
+
+  bool isComplete(){
+    return graphicsFamily.has_value();
+  }
+};
+
 class VDevice : public VWindow 
 {
   public: 
-    VDevice();
-    
     VkInstance instance;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
   protected:
+    VDevice();
     VkResult createInstance();
     VkResult vkResult(VkResult, std::string);
+    
+    VkResult pickPhysicalDevice();
+    bool isDeviceSuitable(VkPhysicalDevice);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice);
+
     void setupDebugMessenger();
     VkDebugUtilsMessengerEXT debugMessenger;
     void DestroyDebugUtilsMessengerEXT(VkInstance, VkDebugUtilsMessengerEXT, const VkAllocationCallbacks*);

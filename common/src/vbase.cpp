@@ -15,6 +15,7 @@ void VBase::initVulkan()
 {
   createInstance();
   setupDebugMessenger();
+  pickPhysicalDevice();
 }
 
 void VBase::mainLoop()
