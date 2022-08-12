@@ -7,6 +7,7 @@
 #include <vector>
 #include <cstring>
 #include <optional>
+#include <set>
 
 #include "vwindow.hpp"
 
@@ -23,9 +24,10 @@ const std::vector<const char*> validationLayers = {
 struct QueueFamilyIndices
 {
   std::optional<uint32_t> graphicsFamily;
+  std::optional<uint32_t> presentFamily;
 
   bool isComplete(){
-    return graphicsFamily.has_value();
+    return graphicsFamily.has_value() && presentFamily.has_value();
   }
 };
 
@@ -36,18 +38,24 @@ class VDevice : public VWindow
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkQueue graphicsQueue = VK_NULL_HANDLE;
+    VkQueue presentQueue = VK_NULL_HANDLE;
     QueueFamilyIndices queueFamilyIndices;
+    VkSurfaceKHR surface;
 
   protected:
     VDevice();
-    VkResult createInstance();
+    
     VkResult vkResult(VkResult, std::string);
+
+    VkResult createInstance();
     
     VkResult pickPhysicalDevice();
     bool isDeviceSuitable(VkPhysicalDevice);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice);
 
     VkResult createLogicalDevice();
+
+    VkResult createSurface();
 
     void setupDebugMessenger();
     VkDebugUtilsMessengerEXT debugMessenger;
