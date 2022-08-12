@@ -34,6 +34,9 @@ class VDevice : public VWindow
   public: 
     VkInstance instance;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice logicalDevice = VK_NULL_HANDLE;
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
+    QueueFamilyIndices queueFamilyIndices;
 
   protected:
     VDevice();
@@ -44,13 +47,14 @@ class VDevice : public VWindow
     bool isDeviceSuitable(VkPhysicalDevice);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice);
 
+    VkResult createLogicalDevice();
+
     void setupDebugMessenger();
     VkDebugUtilsMessengerEXT debugMessenger;
     void DestroyDebugUtilsMessengerEXT(VkInstance, VkDebugUtilsMessengerEXT, const VkAllocationCallbacks*);
 
   private:    
     VkResult CreateDebugUtilsMessengerEXT(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*);
-
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&);
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();

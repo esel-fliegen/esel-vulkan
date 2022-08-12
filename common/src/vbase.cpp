@@ -16,6 +16,7 @@ void VBase::initVulkan()
   createInstance();
   setupDebugMessenger();
   pickPhysicalDevice();
+  createLogicalDevice();
 }
 
 void VBase::mainLoop()
@@ -29,6 +30,7 @@ void VBase::mainLoop()
 
 void VBase::cleanup()
 {
+  vkDestroyDevice(logicalDevice, VK_NULL_HANDLE);
   if(enableValidationLayers)
   {
     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, VK_NULL_HANDLE);

@@ -36,9 +36,13 @@ VkResult VDevice::createInstance()
     createInfo.pNext = nullptr;
   }
 
-  return vkResult(vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance),
+  VkResult result =  vkResult(vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance),
     "create instance");
+
+  return result;
 }
+
+
 
 VkResult VDevice::vkResult(VkResult result, std::string msg)
 {
@@ -76,11 +80,52 @@ VkResult VDevice::pickPhysicalDevice()
   return VK_SUCCESS;
 }
 
+VkResult VDevice::createLogicalDevice()
+{
+  VkDeviceQueueCreateInfo queueCreateInfo{};
+  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queueCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+  queueCreateInfo.queueCount = 1;
+
+  float queuePriority = 1.0f;
+  queueCreateInfo.pQueuePriorities = &queuePriority;
+
+  VkPhysicalDeviceFeatures deviceFeautes{};
+
+  VkDeviceCreateInfo createInfo{};
+  createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+  createInfo.pQueueCreateInfos = &queueCreateInfo;
+  createInfo.queueCreateInfoCount = 1;
+
+  createInfo.pEnabledFeatures = &deviceFeautes;
+
+  createInfo.enabledExtensionCount = 0;
+
+  if(enableValidationLayers)
+  {
+    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+    createInfo.ppEnabledLayerNames = validationLayers.data();
+  }
+  else
+    createInfo.enabledLayerCount = 0;
+  
+  VkResult result = vkResult(vkCreateDevice(physicalDevice, &createInfo, VK_NULL_HANDLE, &logicalDevice),
+    "create logical device");
+
+  vkGetDeviceQueue(logicalDevice, queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue);
+
+  return result;
+  
+
+}
+
+
 bool VDevice::isDeviceSuitable(VkPhysicalDevice device)
 {
-  QueueFamilyIndices indices = findQueueFamilies(device);
+  queueFamilyIndices = findQueueFamilies(device);
   
-  return indices.isComplete();
+  return queueFamilyIndices.isComplete();
 }
 
 QueueFamilyIndices VDevice::findQueueFamilies(VkPhysicalDevice device)
