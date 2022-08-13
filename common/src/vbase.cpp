@@ -7,6 +7,7 @@ void VBase::run()
 {
   initGLFWwindow();
   initVulkan();
+  initImgui();
   mainLoop();  
   cleanup();
 }
@@ -18,6 +19,7 @@ void VBase::initVulkan()
   createSurface();
   pickPhysicalDevice();
   createLogicalDevice();
+  
 
 }
 
@@ -27,12 +29,15 @@ void VBase::mainLoop()
   {
     processInput(glfwWindow);
     glfwPollEvents();
+    renderLoopBegin();
+    imguiDemo();
+    renderLoopEnd(&mainWindowData);
   }
 }
 
 void VBase::cleanup()
 {
-
+  cleanImgui();
   vkDestroyDevice(logicalDevice, VK_NULL_HANDLE);
   if(enableValidationLayers)
   {

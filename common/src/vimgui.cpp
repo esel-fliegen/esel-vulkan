@@ -1,7 +1,9 @@
 #include "vimgui.hpp"
 
 VImgui::VImgui()
-{}
+{
+  
+}
 
 void VImgui::framePresent(ImGui_ImplVulkanH_Window* wd)
 {
@@ -108,7 +110,10 @@ VkResult VImgui::createSurfaceFormat(ImGui_ImplVulkanH_Window* wd, int width, in
     wd->PresentMode = ImGui_ImplVulkanH_SelectPresentMode(physicalDevice, wd->Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
 
     IM_ASSERT(minImageCount >= 2);
-    ImGui_ImplVulkanH_CreateOrResizeWindow(instance, physicalDevice, logicalDevice, wd, queueFamily, VK_NULL_HANDLE, width, height, minImageCount);
+    ImGui_ImplVulkanH_CreateOrResizeWindow(instance, physicalDevice, logicalDevice, wd, queueFamilyIndices.graphicsFamily.value(),
+      VK_NULL_HANDLE, width, height, minImageCount);
+
+  return result;
 }
 
 VkResult VImgui::createDescriptorPool()
@@ -140,8 +145,152 @@ VkResult VImgui::createDescriptorPool()
   return result;
 }
 
-void VImgui::initImgui()
+void VImgui::renderLoopBegin()
 {
-  createDescriptorPool();
+  if (swapChainRebuild)
+  {
+    int width, height;
+    glfwGetFramebufferSize(glfwWindow, &width, &height);
+    if (width > 0 && height > 0)
+    {
+      ImGui_ImplVulkan_SetMinImageCount(minImageCount);
+      ImGui_ImplVulkanH_CreateOrResizeWindow(instance, physicalDevice, logicalDevice, &mainWindowData, queueFamilyIndices.graphicsFamily.value(),
+        VK_NULL_HANDLE, width, height, minImageCount);
+      mainWindowData.FrameIndex = 0;
+      swapChainRebuild = false;
+    }
+  }
+
+  ImGui_ImplVulkan_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
 }
 
+void VImgui::renderLoopEnd(ImGui_ImplVulkanH_Window* wd)
+{
+  ImGui::Render();
+  ImDrawData* draw_data = ImGui::GetDrawData();
+  const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
+  if (!is_minimized)
+  {
+    wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
+    wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
+    wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
+    wd->ClearValue.color.float32[3] = clear_color.w;
+    frameRender(wd, draw_data);
+    framePresent(wd);
+  }
+}
+
+
+
+void VImgui::initImgui()
+{
+  int w, h;
+  glfwGetFramebufferSize(glfwWindow, &w, &h);
+  ImGui_ImplVulkanH_Window* wd = &mainWindowData;
+  createDescriptorPool();
+
+  createSurfaceFormat(wd, w, h);
+
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+  ImGui::StyleColorsDark();
+
+  ImGui_ImplGlfw_InitForVulkan(glfwWindow, true);
+  ImGui_ImplVulkan_InitInfo init_info = {};
+  init_info.Instance = instance;
+  init_info.PhysicalDevice = physicalDevice;
+  init_info.Device = logicalDevice;
+  init_info.QueueFamily = queueFamilyIndices.graphicsFamily.value();
+  init_info.Queue = graphicsQueue;
+  init_info.PipelineCache = pipelineCache;
+  init_info.DescriptorPool = descriptorPool;
+  init_info.Subpass = 0;
+  init_info.MinImageCount = minImageCount;
+  init_info.ImageCount = wd->ImageCount;
+  init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+  init_info.Allocator = VK_NULL_HANDLE;
+  init_info.CheckVkResultFn = check_vk_result;
+  ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
+
+  {
+    VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
+    VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
+
+    VkResult result = vkResult(vkResetCommandPool(logicalDevice, command_pool, 0),
+      "reset command pool");
+    
+    VkCommandBufferBeginInfo begin_info = {};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    result = vkResult(vkBeginCommandBuffer(command_buffer, &begin_info),
+      "begin command buffer");
+
+    ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+
+    VkSubmitInfo end_info = {};
+    end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    end_info.commandBufferCount = 1;
+    end_info.pCommandBuffers = &command_buffer;
+    result = vkResult(vkEndCommandBuffer(command_buffer), 
+      "end command buffer");
+    result = vkResult(vkQueueSubmit(graphicsQueue, 1, &end_info, VK_NULL_HANDLE),
+      "queue submit");
+
+    result = vkResult(vkDeviceWaitIdle(logicalDevice),
+      "device wait idle");
+
+    ImGui_ImplVulkan_DestroyFontUploadObjects();
+  }
+}
+
+void VImgui::cleanImgui()
+{
+  vkResult(vkDeviceWaitIdle(logicalDevice),
+    "device wait idle");  
+  ImGui_ImplVulkan_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+}
+
+void VImgui::imguiDemo()
+{
+  if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+        {
+            static float f = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &show_another_window);
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+
+        // 3. Show another simple window.
+        if (show_another_window)
+        {
+            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+            ImGui::Text("Hello from another window!");
+            if (ImGui::Button("Close Me"))
+                show_another_window = false;
+            ImGui::End();
+        }
+}
