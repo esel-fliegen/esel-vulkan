@@ -1,11 +1,8 @@
 #pragma once
 
+#include "vimgui.hpp"
 
-
-#include "vswapchain.hpp"
-
-
-class VBase : public VSwapChain
+class VBase : public VImgui
 {
   public:
     VBase();
