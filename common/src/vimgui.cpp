@@ -254,6 +254,8 @@ void VImgui::cleanImgui()
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
+  ImGui_ImplVulkanH_DestroyWindow(instance, logicalDevice, &mainWindowData, VK_NULL_HANDLE);
+  vkDestroyDescriptorPool(logicalDevice, descriptorPool, VK_NULL_HANDLE);
 }
 
 void VImgui::imguiDemo()
