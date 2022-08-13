@@ -18,6 +18,7 @@ void VBase::initVulkan()
   createSurface();
   pickPhysicalDevice();
   createLogicalDevice();
+  createSwapChain();
 }
 
 void VBase::mainLoop()
@@ -31,6 +32,7 @@ void VBase::mainLoop()
 
 void VBase::cleanup()
 {
+  vkDestroySwapchainKHR(logicalDevice, swapChain, VK_NULL_HANDLE);
   vkDestroyDevice(logicalDevice, VK_NULL_HANDLE);
   if(enableValidationLayers)
   {

@@ -74,6 +74,7 @@ VkResult VDevice::pickPhysicalDevice()
       break;
     }
   }
+
   if(physicalDevice == VK_NULL_HANDLE)
     throw std::runtime_error("Failed to find a suitable GPU.");
 
@@ -107,7 +108,8 @@ VkResult VDevice::createLogicalDevice()
 
   createInfo.pEnabledFeatures = &deviceFeautes;
 
-  createInfo.enabledExtensionCount = 0;
+  createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+  createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
   if(enableValidationLayers)
   {
@@ -160,7 +162,7 @@ QueueFamilyIndices VDevice::findQueueFamilies(VkPhysicalDevice device)
     vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
 
     if(presentSupport){
-      queueFamilyIndices.presentFamily = i;
+      indices.presentFamily = i;
     }
 
     if (indices.isComplete()) {

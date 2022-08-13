@@ -2,10 +2,10 @@
 
 
 
-#include "vdevice.hpp"
+#include "vswapchain.hpp"
 
 
-class VBase : public VDevice
+class VBase : public VSwapChain
 {
   public:
     VBase();
