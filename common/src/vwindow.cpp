@@ -13,7 +13,7 @@ void VWindow::initGLFWwindow()
 
 void VWindow::processInput(GLFWwindow* window)
 {
-  if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
+  if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
     glfwSetWindowShouldClose(window, true);
   }
     

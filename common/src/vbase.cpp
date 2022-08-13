@@ -43,7 +43,6 @@ void VBase::cleanup()
   {
     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, VK_NULL_HANDLE);
   }
-  vkDestroySurfaceKHR(instance, surface, VK_NULL_HANDLE);
   vkDestroyInstance(instance, VK_NULL_HANDLE);
   cleanupGLFWwindow();
 }
