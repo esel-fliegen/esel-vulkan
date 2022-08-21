@@ -73,15 +73,11 @@ VEsel::VEsel(VkDevice* logicalDevice, VkQueue* graphicsQueue){
   this->graphicsQueue = graphicsQueue;
 }
 
-bool VEsel::createFrameTexture(VkCommandBuffer command_buffer, std::vector<u_char> frame, int width, int height)
+bool VEsel::createFrameTexture(VkCommandBuffer command_buffer)
 {
   ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-  ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
-  unsigned char* pixels;
+  ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;  
   
-  pixels = frame.data();
-  this->width = width;
-  this->height = height;
   size_t upload_size = width * height * 4;
 
   VkResult result;
@@ -253,32 +249,36 @@ void VEsel::destroyFrameViewObjects()
 void VEsel::renderLoop(ImGui_ImplVulkanH_Window* wd, std::vector<u_char> frame, int width, int height)
 {
   {
-  VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
-  VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
+    pixels = frame.data();
+    this->width = width;
+    this->height = height;
 
-  VkResult result = vkResult(vkResetCommandPool(*logicalDevice, command_pool, 0),
-      "reset command pool");
-    
-  VkCommandBufferBeginInfo begin_info = {};
-  begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-  result = vkResult(vkBeginCommandBuffer(command_buffer, &begin_info),
-    "begin command buffer");
+    VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
+    VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
 
-  createFrameTexture(command_buffer, frame, width, height);
+    VkResult result = vkResult(vkResetCommandPool(*logicalDevice, command_pool, 0),
+        "reset command pool");
+      
+    VkCommandBufferBeginInfo begin_info = {};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    result = vkResult(vkBeginCommandBuffer(command_buffer, &begin_info),
+      "begin command buffer");
 
-  VkSubmitInfo end_info = {};
-  end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  end_info.commandBufferCount = 1;
-  end_info.pCommandBuffers = &command_buffer;
-  result = vkResult(vkEndCommandBuffer(command_buffer), 
-    "end command buffer");
-  result = vkResult(vkQueueSubmit(*graphicsQueue, 1, &end_info, VK_NULL_HANDLE),
-    "queue submit");
+    createFrameTexture(command_buffer);
 
-  result = vkResult(vkDeviceWaitIdle(*logicalDevice),
-    "device wait idle");
-  destroyFrameObjects();
+    VkSubmitInfo end_info = {};
+    end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    end_info.commandBufferCount = 1;
+    end_info.pCommandBuffers = &command_buffer;
+    result = vkResult(vkEndCommandBuffer(command_buffer), 
+      "end command buffer");
+    result = vkResult(vkQueueSubmit(*graphicsQueue, 1, &end_info, VK_NULL_HANDLE),
+      "queue submit");
+
+    result = vkResult(vkDeviceWaitIdle(*logicalDevice),
+      "device wait idle");
+    destroyFrameObjects();
   }
   if(showFrame)
   {

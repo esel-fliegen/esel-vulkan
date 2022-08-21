@@ -19,9 +19,9 @@ class VEsel
     ImTextureID frameTexture;
     bool showFrame = false;
     int width, height;
-    
+    unsigned char* pixels;    
 
-    bool createFrameTexture(VkCommandBuffer, std::vector<u_char>, int, int);
+    bool createFrameTexture(VkCommandBuffer);
     void destroyFrameObjects();
     void destroyFrameViewObjects();
     void renderLoop(ImGui_ImplVulkanH_Window*, std::vector<u_char>, int, int);
