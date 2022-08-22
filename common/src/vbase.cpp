@@ -1,7 +1,9 @@
 #include "vbase.hpp"
 
 VBase::VBase()
-{}
+{
+  vFrame.initFrame(&logicalDevice, &graphicsQueue);
+}
 
 void VBase::run()
 {
@@ -10,6 +12,14 @@ void VBase::run()
   initImgui();
   mainLoop();  
   cleanup();
+}
+
+void VBase::show(std::vector<u_char>* frame,  int* width, int* height)
+{
+  this->frame = frame;
+  this->width = width;
+  this->height = height;
+  run();
 }
 
 void VBase::initVulkan()
@@ -30,8 +40,9 @@ void VBase::mainLoop()
     processInput(glfwWindow);
     glfwPollEvents();
     renderLoopBegin();
-    imguiDemo();
+    vFrame.renderLoop(&mainWindowData, frame, width, height);
     renderLoopEnd(&mainWindowData);
+    vFrame.destroyFrameViewObjects();
   }
 }
 

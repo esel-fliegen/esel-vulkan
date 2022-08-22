@@ -8,22 +8,23 @@
 
 
 
-class VEsel
+class VFrame
 {
   public:
-    VEsel(VkDevice*, VkQueue*);
-
+    VFrame();
+    
+    void initFrame(VkDevice*, VkQueue*);
     VkDevice* logicalDevice;
     VkQueue* graphicsQueue;
 
     ImTextureID frameTexture;
     bool showFrame = false;
     int width, height;
-    unsigned char* pixels;    
+    unsigned char* pixels = nullptr;    
 
     bool createFrameTexture(VkCommandBuffer);
     void destroyFrameObjects();
     void destroyFrameViewObjects();
-    void renderLoop(ImGui_ImplVulkanH_Window*, std::vector<u_char>, int, int);
+    void renderLoop(ImGui_ImplVulkanH_Window*, std::vector<u_char>*, int*, int*);
     VkResult vkResult(VkResult, std::string);
 };

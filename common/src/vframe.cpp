@@ -1,4 +1,4 @@
-#include "vesel.hpp"
+#include "vframe.hpp"
 
 struct ImGui_ImplVulkanH_FrameRenderBuffers
 {
@@ -68,18 +68,19 @@ static uint32_t ImGui_ImplVulkan_MemoryType(VkMemoryPropertyFlags properties, ui
     return 0xFFFFFFFF; // Unable to find memoryType
 }
 
-VEsel::VEsel(VkDevice* logicalDevice, VkQueue* graphicsQueue){
+VFrame::VFrame(){}
+
+void VFrame::initFrame(VkDevice* logicalDevice, VkQueue* graphicsQueue){
   this->logicalDevice = logicalDevice;
   this->graphicsQueue = graphicsQueue;
 }
 
-bool VEsel::createFrameTexture(VkCommandBuffer command_buffer)
+bool VFrame::createFrameTexture(VkCommandBuffer command_buffer)
 {
   ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
   ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;  
   
   size_t upload_size = width * height * 4;
-
   VkResult result;
 
   {
@@ -153,7 +154,9 @@ bool VEsel::createFrameTexture(VkCommandBuffer command_buffer)
     char* map = NULL;
     result = vkResult(vkMapMemory(v->Device, bd->UploadBufferMemory, 0, upload_size, 0, (void**)(&map)),
       "map memory");
+
     memcpy(map, pixels, upload_size);
+
     VkMappedMemoryRange range[1] = {};
     range[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range[0].memory = bd->UploadBufferMemory;
@@ -205,7 +208,7 @@ bool VEsel::createFrameTexture(VkCommandBuffer command_buffer)
   return true;
 }
 
-void VEsel::destroyFrameObjects()
+void VFrame::destroyFrameObjects()
 {
   ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
   ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
@@ -221,7 +224,7 @@ void VEsel::destroyFrameObjects()
   }
 }
 
-void VEsel::destroyFrameViewObjects()
+void VFrame::destroyFrameViewObjects()
 {
   ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
   ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
@@ -244,17 +247,21 @@ void VEsel::destroyFrameViewObjects()
     vkFreeMemory(v->Device, bd->FrameMemory, VK_NULL_HANDLE);
     bd->FrameMemory = VK_NULL_HANDLE;
   }
+
 }
 
-void VEsel::renderLoop(ImGui_ImplVulkanH_Window* wd, std::vector<u_char> frame, int width, int height)
+void VFrame::renderLoop(ImGui_ImplVulkanH_Window* wd, std::vector<u_char>* frame, int* width, int* height)
 {
   {
-    pixels = frame.data();
-    this->width = width;
-    this->height = height;
+    showFrame = true;
+    this->width = *width;
+    this->height = *height;
+    pixels = frame->data();
 
     VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
     VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
+    vkResult(vkDeviceWaitIdle(*logicalDevice),
+      "device wait idle");
 
     VkResult result = vkResult(vkResetCommandPool(*logicalDevice, command_pool, 0),
         "reset command pool");
@@ -286,14 +293,14 @@ void VEsel::renderLoop(ImGui_ImplVulkanH_Window* wd, std::vector<u_char> frame, 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("HeeHaw!");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::Image(frameTexture, ImVec2(width, height));
+    ImGui::Image(frameTexture, ImVec2(*width, *height));
     ImGui::End();
     showFrame = false;
   }
 }
 
 
-VkResult VEsel::vkResult(VkResult result, std::string msg)
+VkResult VFrame::vkResult(VkResult result, std::string msg)
 {
   if(result != VK_SUCCESS)  
     throw std::runtime_error("Failed to " + msg);  
